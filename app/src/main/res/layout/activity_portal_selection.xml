@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PortalSelectionActivity">
+
+    <TextView
+        android:id="@+id/textView_portalUrlLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@id/editText_portalUrl"
+        android:text="Enter an ArcGIS URL"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="-96dp" />
+
+    <EditText
+        android:id="@+id/editText_portalUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="https://host.domain.com/portalwa"
+        android:inputType="textUri"
+        app:layout_constraintEnd_toStartOf="@+id/button_submitPortalUrl"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_submitPortalUrl"
+        app:layout_constraintBottom_toBottomOf="@id/button_submitPortalUrl"
+        />
+
+    <Button
+        android:id="@+id/button_submitPortalUrl"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:text="➡"
+        android:textSize="12pt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_portalUrlLabel"
+        android:onClick="button_submitPortalUrl_onClick"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

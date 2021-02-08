@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Mission Viewer</string>
+    <string name="oauth_redirect_uri_scheme">app3g1tqnls6nsdazbn</string>
+    <string name="oauth_redirect_uri_host">callback</string>
+    <string name="oauth_client_id">3G1TqnLs6nsdAzbN</string>
+</resources>
