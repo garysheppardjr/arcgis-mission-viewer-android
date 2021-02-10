@@ -22,9 +22,17 @@ public class MissionsListFragment extends Fragment {
 
     private RecyclerView recyclerView;
 
-    public MissionsListFragment(String portalUrl, List<String> missionIds) {
+    public MissionsListFragment() {
+        this(null, null);
+    }
+
+    private MissionsListFragment(String portalUrl, List<String> missionIds) {
         this.portalUrl = portalUrl;
         this.missionIds = missionIds;
+    }
+
+    public static MissionsListFragment newInstance(String portalUrl, List<String> missionIds) {
+        return new MissionsListFragment(portalUrl, missionIds);
     }
 
     @Nullable

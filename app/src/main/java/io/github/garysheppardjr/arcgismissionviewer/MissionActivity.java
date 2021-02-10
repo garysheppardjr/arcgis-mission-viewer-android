@@ -6,16 +6,22 @@ import android.util.Log;
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment;
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
+import com.esri.arcgisruntime.mapping.view.Graphic;
+import com.esri.arcgisruntime.mapping.view.GraphicsOverlay;
 import com.esri.arcgisruntime.mapping.view.MapView;
 import com.esri.arcgisruntime.portal.Portal;
 import com.esri.arcgisruntime.portal.PortalInfo;
 import com.esri.arcgisruntime.portal.PortalItem;
+import com.esri.arcgisruntime.security.OAuthTokenCredential;
+import com.esri.arcgisruntime.symbology.Renderer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +29,8 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import io.github.garysheppardjr.layers.StreamServiceListener;
 
 public class MissionActivity extends ArcGISOAuthActivity {
 
@@ -55,7 +63,10 @@ public class MissionActivity extends ArcGISOAuthActivity {
      */
     public static final int RESULT_NO_PORTAL_INFO = 3;
 
+    private final GraphicsOverlay streamGraphicsOverlay = new GraphicsOverlay();
+
     private MapView mapView;
+    private StreamServiceListener streamServiceListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,7 +129,8 @@ public class MissionActivity extends ArcGISOAuthActivity {
                 finish();
                 return;
             } else {
-                PortalItem missionItem = new PortalItem(portal, getIntent().getStringExtra(EXTRA_MISSION_ID));
+                String missionId = getIntent().getStringExtra(EXTRA_MISSION_ID);
+                PortalItem missionItem = new PortalItem(portal, missionId);
                 try {
                     JSONObject missionItemData = new JSONObject(new Scanner(missionItem.fetchDataAsync().get()).useDelimiter("\\A").next());
                     JSONArray maps = missionItemData.getJSONArray("maps");
@@ -128,8 +140,39 @@ public class MissionActivity extends ArcGISOAuthActivity {
                     ArcGISMap map = new ArcGISMap(portalItem);
                     mapView = findViewById(R.id.mapView);
                     mapView.setMap(map);
+                    map.addDoneLoadingListener(new Runnable() {
+                        @Override
+                        public void run() {
+                            map.removeDoneLoadingListener(this);
+                            mapView.getGraphicsOverlays().add(streamGraphicsOverlay);
+                        }
+                    });
+
+                    StreamServiceListener.StreamServiceCallback callback = new StreamServiceListener.StreamServiceCallback() {
+                        @Override
+                        protected void rendererAvailable(Renderer renderer) {
+                            streamGraphicsOverlay.setRenderer(renderer);
+                        }
+
+                        @Override
+                        protected void newStreamFeature(Graphic newFeature) {
+                            streamGraphicsOverlay.getGraphics().add(newFeature);
+                        }
+                    };
+                    streamServiceListener = new StreamServiceListener(
+                            theMissionServerOptional.get().getString("url") + "/rest/services/" + missionId + "/tracks/StreamServer",
+                            ((OAuthTokenCredential) portal.getCredential()).getAccessToken(),
+                            callback
+                    );
+                    new Thread(() -> {
+                        try {
+                            streamServiceListener.start();
+                        } catch (IOException | URISyntaxException | JSONException e) {
+                            Log.e(TAG, "Could not connect to mission stream service: " + e.getLocalizedMessage(), e);
+                        }
+                    }).start();
                 } catch (JSONException | ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "Could not get mission and web map: " + e.getLocalizedMessage(), e);
                 }
             }
         });
@@ -155,6 +198,7 @@ public class MissionActivity extends ArcGISOAuthActivity {
 
     @Override
     protected void onDestroy() {
+        streamServiceListener.close();
         if (null != mapView) {
             mapView.dispose();
         }

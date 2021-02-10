@@ -141,7 +141,7 @@ public class MissionsListActivity extends ArcGISOAuthActivity {
                                     // Put the missions in the list
                                     // TODO perhaps save the list
                                     FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                                    MissionsListFragment fragment = new MissionsListFragment(portalUrlFinal, missionIds);
+                                    MissionsListFragment fragment = MissionsListFragment.newInstance(portalUrlFinal, missionIds);
                                     transaction.replace(R.id.sample_content_fragment, fragment);
                                     transaction.commit();
                                 } catch (JSONException e) {
@@ -154,7 +154,7 @@ public class MissionsListActivity extends ArcGISOAuthActivity {
                                 @Override
                                 public Map<String, String> getHeaders() throws AuthFailureError {
                                     HashMap<String, String> headers = new HashMap<>(super.getHeaders());
-                                    headers.put("Authorization", ((OAuthTokenCredential) portal.getCredential()).getAccessToken());
+                                    headers.put("Authorization", "Bearer " + ((OAuthTokenCredential) portal.getCredential()).getAccessToken());
                                     return headers;
                                 }
                             };
